@@ -13,13 +13,22 @@ namespace DynamicDatabase.Controllers
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly AppDbContext _context;
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDbContextFactory<AppDbContext> dbContextFactory)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDbContextFactory<AppDbContext> dbContextFactory, AppDbContext context)
         {
             _logger = logger;
             _dbContextFactory = dbContextFactory;
+            _context = context;
+        }
+
+        [HttpPost("{databaseName}")]
+        public async Task<IActionResult> CreateDatabase(string databaseName)
+        {
+            await _context.Database.ExecuteSqlRawAsync($"CREATE DATABASE {databaseName}");
+            return StatusCode(StatusCodes.Status201Created, $"Database {databaseName} Created!");
         }
 
         [HttpPost]
