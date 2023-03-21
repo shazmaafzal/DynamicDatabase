@@ -1,6 +1,7 @@
 using DynamicDatabase.DbContexts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Xml;
 
 namespace DynamicDatabase.Controllers
 {
@@ -29,6 +30,29 @@ namespace DynamicDatabase.Controllers
         {
             await _context.Database.ExecuteSqlRawAsync($"CREATE DATABASE {databaseName}");
             return StatusCode(StatusCodes.Status201Created, $"Database {databaseName} Created!");
+        }
+
+        [HttpPost]
+        [Route("create-new-table")]
+        public async Task<IActionResult> CreateNewTable()
+        {
+            // Ensure that the database and tables are created
+
+            try
+            {
+                await _context.Database.EnsureCreatedAsync();
+            }
+            catch (Exception oops)
+            {
+                return BadRequest(oops.Message);
+            }
+
+            //// You can now use the MyEntities DbSet to perform CRUD operations
+            //var newEntity = new MyEntity { Name = "New Entity" };
+            //_context.MyEntities.Add(newEntity);
+            //await _context.SaveChangesAsync();
+
+            return StatusCode(StatusCodes.Status201Created);
         }
 
         [HttpPost]
