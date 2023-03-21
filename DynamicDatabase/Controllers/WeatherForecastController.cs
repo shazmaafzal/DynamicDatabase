@@ -1,6 +1,7 @@
 using DynamicDatabase.DbContexts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Xml;
 
 namespace DynamicDatabase.Controllers
@@ -15,14 +16,16 @@ namespace DynamicDatabase.Controllers
     };
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly AppDbContext _context;
+        private readonly IConfiguration Configuration;
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDbContextFactory<AppDbContext> dbContextFactory, AppDbContext context)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDbContextFactory<AppDbContext> dbContextFactory, AppDbContext context, IConfiguration configuration)
         {
             _logger = logger;
             _dbContextFactory = dbContextFactory;
             _context = context;
+            Configuration = configuration;
         }
 
         [HttpPost("{databaseName}")]
@@ -34,26 +37,54 @@ namespace DynamicDatabase.Controllers
 
         [HttpPost]
         [Route("create-new-table")]
-        public async Task<IActionResult> CreateNewTable()
+        public async Task<IActionResult> CreateNewTable([FromBody] string connectionString)
         {
-            // Ensure that the database and tables are created
+            //string connectionString = Configuration.GetConnectionString("DefaultConnection");
+
+            // Modify the DbContext options to include the connection string
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlServer(connectionString)
+                .Options;
+
+            // Create an instance of the DbContext using the modified options
+            var dbContext = new AppDbContext(options);
 
             try
             {
-                await _context.Database.EnsureCreatedAsync();
+                await dbContext.Database.EnsureCreatedAsync();
             }
             catch (Exception oops)
             {
                 return BadRequest(oops.Message);
             }
 
-            //// You can now use the MyEntities DbSet to perform CRUD operations
-            //var newEntity = new MyEntity { Name = "New Entity" };
-            //_context.MyEntities.Add(newEntity);
-            //await _context.SaveChangesAsync();
-
             return StatusCode(StatusCodes.Status201Created);
         }
+
+
+
+        //[HttpPost]
+        //[Route("create-new-table")]
+        //public async Task<IActionResult> CreateNewTable()
+        //{
+        //    // Ensure that the database and tables are created
+
+        //    try
+        //    {
+        //        await _context.Database.EnsureCreatedAsync();
+        //    }
+        //    catch (Exception oops)
+        //    {
+        //        return BadRequest(oops.Message);
+        //    }
+
+        //    //// You can now use the MyEntities DbSet to perform CRUD operations
+        //    //var newEntity = new MyEntity { Name = "New Entity" };
+        //    //_context.MyEntities.Add(newEntity);
+        //    //await _context.SaveChangesAsync();
+
+        //    return StatusCode(StatusCodes.Status201Created);
+        //}
 
         [HttpPost]
         public IActionResult CreateDatabase()
