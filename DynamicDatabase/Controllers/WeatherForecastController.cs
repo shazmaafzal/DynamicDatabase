@@ -2,6 +2,7 @@ using DynamicDatabase.DbContexts;
 using DynamicDatabase.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
 
 namespace DynamicDatabase.Controllers
 {
@@ -30,7 +31,9 @@ namespace DynamicDatabase.Controllers
         [HttpPost("{databaseName}")]
         public async Task<IActionResult> CreateDatabase(string databaseName)
         {
-            await _context.Database.ExecuteSqlRawAsync($"CREATE DATABASE {databaseName}");
+            string test = HtmlEncoder.Default.Encode(databaseName);
+            //string test = System.Web.HttpUtility.UrlEncode(databaseName);
+            await _context.Database.ExecuteSqlRawAsync($"CREATE DATABASE {test}");
             return StatusCode(StatusCodes.Status201Created, $"Database {databaseName} Created!");
         }
 
